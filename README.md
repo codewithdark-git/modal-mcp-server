@@ -1,4 +1,9 @@
 # modal-mcp-server
+![NPM Version](https://img.shields.io/npm/v/modal-mcp-server)
+![NPM Downloads](https://img.shields.io/npm/dw/modal-mcp-server)
+[![Socket Badge](https://badge.socket.dev/npm/package/modal-mcp-server/0.2.0)](https://badge.socket.dev/npm/package/modal-mcp-server/0.2.0)
+![NPM License](https://img.shields.io/npm/l/modal-mcp-server)
+
 
 Run real GPU tests, training jobs, inference scripts, and benchmarks from any MCP-compatible AI coding agent using your own [Modal](https://modal.com) account.
 
