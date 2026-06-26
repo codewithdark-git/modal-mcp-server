@@ -12,11 +12,11 @@ import {
 import { registerRunFunction } from "./tools/run-function.js";
 import { registerRunTests } from "./tools/run-tests.js";
 import { registerRunTrainingJob } from "./tools/run-training-job.js";
-import { checkPythonEnvironment } from "./services/python.js";
+import { checkModalAuthentication } from "./services/modal.js";
 
 async function main(): Promise<void> {
   if (process.argv[2] === "doctor") {
-    const result = await checkPythonEnvironment({ python: readFlag("--python") });
+    const result = await checkModalAuthentication();
     console.log(JSON.stringify(result, null, 2));
     process.exit(result.ok ? 0 : 1);
   }
