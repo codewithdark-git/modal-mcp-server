@@ -1,6 +1,6 @@
 {
   "name": "modal-mcp-server",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "MCP server that lets AI agents run tests, training jobs, and Python GPU workloads on Modal.com",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
