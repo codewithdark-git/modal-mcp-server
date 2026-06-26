@@ -1,6 +1,6 @@
 {
   "name": "modal-mcp-server",
-  "version": "0.2.0",
+  "version": "1.0.0",
   "description": "MCP server that lets AI agents run tests, training jobs, and Python GPU workloads on Modal.com",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -37,6 +37,7 @@
   "type": "module",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
+    "modal": "^0.7.2",
     "zod": "^3.25.0"
   },
   "devDependencies": {
