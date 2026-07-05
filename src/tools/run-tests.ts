@@ -16,7 +16,7 @@ export function registerRunTests(server: McpServer): void {
     {
       title: "Run Tests on Modal GPU",
       description:
-        "Upload a local Python project to a Modal GPU sandbox, install optional dependencies, run pytest or another test command, and return real GPU output.",
+        "Upload a local Python project to a Modal GPU sandbox, install optional dependencies, run pytest or another test command, and return real GPU output. Use gpu='none' for CPU-only execution.",
       inputSchema: RunTestsInputSchema.shape,
       annotations: {
         readOnlyHint: false,
@@ -53,5 +53,6 @@ function toConfig(input: RunTestsInput): ModalRunConfig {
     env: input.env,
     excludePatterns: [...DEFAULT_EXCLUDE_PATTERNS, ...input.exclude_patterns],
     maxUploadMb: input.max_upload_mb,
+    concurrencyLimit: input.concurrency_limit,
   };
 }

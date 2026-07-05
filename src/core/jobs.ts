@@ -41,6 +41,15 @@ export async function startModalJob(config: ModalRunConfig): Promise<StartedJob>
     env: config.env,
     excludePatterns: config.excludePatterns,
     maxUploadMb: config.maxUploadMb,
+    concurrencyLimit: config.concurrencyLimit,
+    onProgress: (progress) => {
+      appendLog(job, "upload", 
+        `Uploading: ${progress.uploaded}/${progress.total} files (${progress.currentFile || "..."})`
+      );
+    },
+    onLog: (level, message) => {
+      appendLog(job, level, message);
+    },
   };
 
   const done = executeJob(job, modalConfig);
@@ -95,7 +104,12 @@ async function executeJob(job: JobInfo, config: ModalJobConfig): Promise<JobInfo
   } catch (error) {
     const errorMessage = error instanceof Error ? error.message : String(error);
     failJob(job, errorMessage);
-    appendLog(job, "modal", errorMessage);
+    appendLog(job, "error", errorMessage);
+    
+    // Extract additional error details if available
+    if (error instanceof Error && error.cause) {
+      appendLog(job, "error", `Cause: ${String(error.cause)}`);
+    }
   }
   
   job.completedAt = new Date().toISOString();
