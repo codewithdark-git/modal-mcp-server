@@ -1,9 +1,12 @@
 import path from "node:path";
 import { z } from "zod";
-import { DEFAULT_MAX_UPLOAD_MB } from "../core/config.js";
+import { DEFAULT_MAX_UPLOAD_MB, DEFAULT_EXCLUDE_PATTERNS } from "../core/config.js";
 import { GPU_TYPES } from "../core/types.js";
 
-export const GpuSchema = z.enum(GPU_TYPES).describe("Modal GPU type.");
+// Enhanced GPU schema that includes "none" for CPU-only execution
+export const GpuSchema = z
+  .enum(GPU_TYPES as unknown as [string, ...string[]])
+  .describe("Modal GPU type. Use 'none' for CPU-only execution.");
 
 export const ProjectPathSchema = z
   .string()
@@ -25,13 +28,13 @@ const CommonRunShape = {
     .string()
     .optional()
     .describe("Optional shell command to run in /project before the main command."),
-  gpu: GpuSchema.optional(),
+  gpu: GpuSchema.optional().default("T4"),
   timeout: z.number().int().min(10).max(86_400).optional().describe("Remote Modal sandbox timeout in seconds."),
   python_version: z
     .string()
     .regex(/^3\.\d{1,2}$/)
     .optional()
-    .describe('Python version for Modal Image.debian_slim, for example "3.11".'),
+    .describe('Python version for Modal Image, for example "3.11".'),
   env: z
     .record(z.string())
     .default({})
@@ -39,7 +42,7 @@ const CommonRunShape = {
   exclude_patterns: z
     .array(z.string().min(1))
     .default([])
-    .describe("Additional gitignore-style patterns to exclude from upload."),
+    .describe("Additional gitignore-style patterns to exclude from upload. Built-in exclusions: " + DEFAULT_EXCLUDE_PATTERNS.join(", ")),
   max_upload_mb: z
     .number()
     .int()

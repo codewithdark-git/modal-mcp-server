@@ -6,7 +6,7 @@ import {
   DEFAULT_TRAINING_TIMEOUT_SECONDS,
 } from "../core/config.js";
 import { startModalJob, toResult, waitForJob } from "../core/jobs.js";
-import type { ModalRunConfig } from "../core/types.js";
+import type { ModalRunConfig, GpuType } from "../core/types.js";
 import { RunTrainingJobInputSchema, type RunTrainingJobInput } from "../schemas/inputs.js";
 import { errorResponse, jobResultResponse, jobStartedResponse } from "./responses.js";
 
@@ -16,7 +16,7 @@ export function registerRunTrainingJob(server: McpServer): void {
     {
       title: "Run Training Job on Modal GPU",
       description:
-        "Launch a training or fine-tuning command on a Modal GPU sandbox. Defaults to background mode so agents can poll status and logs.",
+        "Upload a local Python project to a Modal GPU sandbox, install dependencies, and run a training command. Use gpu='none' for CPU-only execution.",
       inputSchema: RunTrainingJobInputSchema.shape,
       annotations: {
         readOnlyHint: false,
@@ -45,7 +45,7 @@ function toConfig(input: RunTrainingJobInput): ModalRunConfig {
     projectPath: input.project_path,
     command: input.train_command,
     extraPackages: input.extra_packages,
-    gpu: input.gpu ?? DEFAULT_GPU,
+    gpu: (input.gpu ?? DEFAULT_GPU) as GpuType,
     timeoutSeconds: input.timeout ?? DEFAULT_TRAINING_TIMEOUT_SECONDS,
     pythonVersion: input.python_version ?? DEFAULT_PYTHON_VERSION,
     requirementsFile: input.requirements_file,

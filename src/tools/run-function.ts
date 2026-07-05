@@ -1,4 +1,3 @@
-import path from "node:path";
 import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   DEFAULT_EXCLUDE_PATTERNS,
@@ -7,7 +6,7 @@ import {
   DEFAULT_SCRIPT_TIMEOUT_SECONDS,
 } from "../core/config.js";
 import { startModalJob, toResult, waitForJob } from "../core/jobs.js";
-import type { ModalRunConfig } from "../core/types.js";
+import type { ModalRunConfig, GpuType } from "../core/types.js";
 import { RunFunctionInputSchema, type RunFunctionInput } from "../schemas/inputs.js";
 import { errorResponse, jobResultResponse, jobStartedResponse } from "./responses.js";
 
@@ -15,9 +14,9 @@ export function registerRunFunction(server: McpServer): void {
   server.registerTool(
     "modal_run_function",
     {
-      title: "Run Python Script on Modal GPU",
+      title: "Run Python Function on Modal GPU",
       description:
-        "Run a Python script from a local project in a Modal GPU sandbox for inference, evaluation, benchmarks, or ad hoc GPU work.",
+        "Upload a local Python project to a Modal GPU sandbox, install dependencies, and run a Python script. Use gpu='none' for CPU-only execution.",
       inputSchema: RunFunctionInputSchema.shape,
       annotations: {
         readOnlyHint: false,
@@ -41,17 +40,14 @@ export function registerRunFunction(server: McpServer): void {
 }
 
 function toConfig(input: RunFunctionInput): ModalRunConfig {
-  const script = input.script_path.replaceAll("\\", "/");
-  if (path.isAbsolute(script) || script.includes("..")) {
-    throw new Error("script_path must be a relative path inside project_path.");
-  }
-  const args = input.function_args ? ` ${input.function_args}` : "";
+  const command = `python ${input.script_path}${input.function_args ? ` ${input.function_args}` : ""}`;
+  
   return {
     kind: "script",
     projectPath: input.project_path,
-    command: `python ${shellQuote(script)}${args}`,
+    command: command,
     extraPackages: input.extra_packages,
-    gpu: input.gpu ?? DEFAULT_GPU,
+    gpu: (input.gpu ?? DEFAULT_GPU) as GpuType,
     timeoutSeconds: input.timeout ?? DEFAULT_SCRIPT_TIMEOUT_SECONDS,
     pythonVersion: input.python_version ?? DEFAULT_PYTHON_VERSION,
     requirementsFile: input.requirements_file,
@@ -60,8 +56,4 @@ function toConfig(input: RunFunctionInput): ModalRunConfig {
     excludePatterns: [...DEFAULT_EXCLUDE_PATTERNS, ...input.exclude_patterns],
     maxUploadMb: input.max_upload_mb,
   };
-}
-
-function shellQuote(value: string): string {
-  return `'${value.replaceAll("'", "'\\''")}'`;
 }

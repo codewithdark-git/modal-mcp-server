@@ -1,5 +1,7 @@
+// GPU types including "none" for CPU-only execution
 export const GPU_TYPES = [
   "any",
+  "none",  // CPU-only execution
   "T4",
   "L4",
   "A10",
@@ -68,4 +70,15 @@ export interface StartedJob {
   job: JobInfo;
   done: Promise<JobInfo>;
   cancel: () => void;
+}
+
+// Volume and mount support for caching
+export interface VolumeConfig {
+  volumeName: string;
+  mountPath: string;
+  createIfMissing?: boolean;
+}
+
+export interface ModalJobConfigWithVolumes extends ModalRunConfig {
+  volumes?: VolumeConfig[];
 }

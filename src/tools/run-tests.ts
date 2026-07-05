@@ -6,7 +6,7 @@ import {
   DEFAULT_TEST_TIMEOUT_SECONDS,
 } from "../core/config.js";
 import { startModalJob, toResult, waitForJob } from "../core/jobs.js";
-import type { ModalRunConfig } from "../core/types.js";
+import type { ModalRunConfig, GpuType } from "../core/types.js";
 import { RunTestsInputSchema, type RunTestsInput } from "../schemas/inputs.js";
 import { errorResponse, jobResultResponse, jobStartedResponse } from "./responses.js";
 
@@ -16,7 +16,7 @@ export function registerRunTests(server: McpServer): void {
     {
       title: "Run Tests on Modal GPU",
       description:
-        "Upload a local Python project to a Modal GPU sandbox, install optional dependencies, run pytest or another test command, and return real GPU output.",
+        "Upload a local Python project to a Modal GPU sandbox, install optional dependencies, run pytest or another test command, and return real GPU output. Use gpu='none' for CPU-only execution.",
       inputSchema: RunTestsInputSchema.shape,
       annotations: {
         readOnlyHint: false,
@@ -45,7 +45,7 @@ function toConfig(input: RunTestsInput): ModalRunConfig {
     projectPath: input.project_path,
     command: input.test_command,
     extraPackages: input.extra_packages,
-    gpu: input.gpu ?? DEFAULT_GPU,
+    gpu: (input.gpu ?? DEFAULT_GPU) as GpuType,
     timeoutSeconds: input.timeout ?? DEFAULT_TEST_TIMEOUT_SECONDS,
     pythonVersion: input.python_version ?? DEFAULT_PYTHON_VERSION,
     requirementsFile: input.requirements_file,
