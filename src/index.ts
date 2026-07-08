@@ -17,12 +17,13 @@ import { checkModalAuthentication } from "./services/modal.js";
 async function main(): Promise<void> {
   // Check if running as CLI (has subcommand) or MCP server (no args or --mcp flag)
   const args = process.argv.slice(2);
-  const hasSubcommand = args.length > 0 && !args[0].startsWith("--");
+  const firstArg = args[0];
+  const hasSubcommand = args.length > 0 && firstArg !== undefined && !firstArg.startsWith("--");
   const isMcpMode = args.includes("--mcp") || (!hasSubcommand && !args.includes("--help") && !args.includes("-h") && !args.includes("-V") && !args.includes("--version"));
 
   if (hasSubcommand && !isMcpMode) {
     // Run CLI mode - delegate to cli.ts
-    const { default: cliMain } = await import("./cli.js");
+    const { cliMain } = await import("./cli.js");
     await cliMain();
     return;
   }

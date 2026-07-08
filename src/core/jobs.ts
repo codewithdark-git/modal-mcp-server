@@ -1,5 +1,6 @@
 import { randomUUID } from "node:crypto";
 import type { JobInfo, JobResult, ModalRunConfig, StartedJob, ProgressCallback, JobProgress } from "./types.js";
+export { type ProgressCallback } from "./types.js";
 import { executeModalJob, type ModalJobConfig, type ModalJobResult } from "../services/modal.js";
 import { DEFAULT_APP_NAME } from "./config.js";
 

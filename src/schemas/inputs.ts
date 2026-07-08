@@ -1,26 +1,7 @@
 import path from "node:path";
 import { z } from "zod";
 import { DEFAULT_MAX_UPLOAD_MB, DEFAULT_EXCLUDE_PATTERNS } from "../core/config.js";
-import { GPU_TYPES } from "../core/types.js";
-
-// Add "none" to GPU types for CPU-only execution
-export const GPU_TYPES = [
-  "any",
-  "T4",
-  "L4",
-  "A10",
-  "L40S",
-  "A100",
-  "A100-40GB",
-  "A100-80GB",
-  "RTX-PRO-6000",
-  "H100",
-  "H100!",
-  "H200",
-  "B200",
-  "B200+",
-  "none", // CPU-only execution
-] as const;
+import { GPU_TYPES, GpuType } from "../core/types.js";
 
 export const GpuSchema = z.enum(GPU_TYPES).describe("Modal GPU type. Use 'none' for CPU-only execution.");
 
@@ -75,6 +56,13 @@ const CommonRunShape = {
     )
     .optional()
     .describe("Modal Volume mounts for caching (e.g., pip cache, dataset volumes)."),
+  concurrency_limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(100)
+    .optional()
+    .describe("Max concurrent file uploads (default: 10)."),
 };
 
 export const RunTestsInputSchema = z
