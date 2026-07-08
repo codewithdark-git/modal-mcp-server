@@ -6,7 +6,7 @@ This skill provides comprehensive guidance for installing, configuring, and usin
 
 **Package:** [`modal-mcp-server`](https://www.npmjs.com/package/modal-mcp-server)  
 **GitHub:** [codewithdark-git/modal-mcp-server](https://github.com/codewithdark-git/modal-mcp-server)  
-**Version:** 1.0.0+
+**Version:** 2.0.0+
 
 ---
 
@@ -739,4 +739,4 @@ Run through all 10 steps to verify installation:
 
 ---
 
-*Skill version 1.0.0 — Compatible with modal-mcp-server v1.0.0+*
+*Skill version 2.0.0 — Compatible with modal-mcp-server v2.0.0+*

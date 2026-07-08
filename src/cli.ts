@@ -12,7 +12,7 @@ const program = new Command();
 program
   .name("modal-mcp-server")
   .description("MCP server for running GPU-dependent Python workloads on Modal.com")
-  .version("1.0.0")
+  .version("2.0.0")
   .option("--mcp", "Run as MCP stdio server (default if no subcommand)");
 
 program

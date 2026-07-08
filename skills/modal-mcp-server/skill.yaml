@@ -1,5 +1,5 @@
 name: modal-mcp-server
-version: "1.0.0"
+version: "2.0.0"
 description: "MCP server for running GPU-dependent Python workloads (PyTorch, JAX, TensorFlow, Triton, CUDA) on Modal.com using your own Modal account. Supports tests, training, inference, and benchmarks with real-time progress streaming and log following."
 author: "modal-mcp-server contributors"
 license: "MIT"
