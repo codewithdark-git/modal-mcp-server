@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "modal": {
+      "command": "modal-mcp-server",
+      "env": {
+        "MODAL_TOKEN_ID": "${MODAL_TOKEN_ID}",
+        "MODAL_TOKEN_SECRET": "${MODAL_TOKEN_SECRET}"
+      }
+    }
+  }
+}

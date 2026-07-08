@@ -1,279 +1,286 @@
 # modal-mcp-server
+
 ![NPM Version](https://img.shields.io/npm/v/modal-mcp-server)
 ![NPM Downloads](https://img.shields.io/npm/dw/modal-mcp-server)
-[![Socket Badge](https://badge.socket.dev/npm/package/modal-mcp-server/0.2.0)](https://badge.socket.dev/npm/package/modal-mcp-server/0.2.0)
 ![NPM License](https://img.shields.io/npm/l/modal-mcp-server)
+![Node.js Version](https://img.shields.io/badge/node-%3E%3D20-brightgreen)
+[![GitHub](https://img.shields.io/badge/GitHub-codewithdark--git%2Fmodal--mcp--server-blue)](https://github.com/codewithdark-git/modal-mcp-server)
 
+> **Run real GPU tests, training jobs, inference scripts, and benchmarks from any MCP-compatible AI coding agent using your own [Modal](https://modal.com) account.**
 
-Run real GPU tests, training jobs, inference scripts, and benchmarks from any MCP-compatible AI coding agent using your own [Modal](https://modal.com) account.
+---
 
 ## Why This Exists
 
-AI coding agents often test ML code on a local machine without a GPU. GPU tests may be skipped, mocked, or accidentally run on CPU, so the agent can report success even though the real CUDA/PyTorch/JAX/TensorFlow path was never validated.
+AI coding agents often test ML code on a local machine without a GPU. GPU tests may be skipped, mocked, or accidentally run on CPU — so the agent can report success even though the real CUDA/PyTorch/JAX/TensorFlow/Triton path was never validated.
 
-`modal-mcp-server` gives the agent GPU tools. It uploads your project to an ephemeral Modal sandbox, runs the command on real GPU hardware, streams logs back, and returns stdout, stderr, exit code, and status.
+**`modal-mcp-server` gives the agent GPU tools.** It uploads your project to an ephemeral Modal sandbox, runs the command on real GPU hardware, streams progress and logs back, and returns stdout, stderr, exit code, and status.
 
-## Requirements
+---
 
-- **Node.js 20 or newer**
-- A Modal account
-- Modal authentication (via environment variables or config file)
+## Key Features
 
-> **Note**: Python is no longer required! The server now uses the official Modal Node.js SDK.
+| Feature | Description |
+|---------|-------------|
+| **Real GPU Hardware** | T4, L4, A10, L40S, A100, H100, H200, B200+ |
+| **Progress Streaming** | Real-time upload → install → execution phases |
+| **Log Streaming** | Cursor-based `modal_stream_logs` with `follow` mode |
+| **Background Jobs** | Fire-and-forget with `wait=false`, poll status/logs later |
+| **Volume Mounts** | Cache pip packages, datasets, checkpoints across runs |
+| **No Python Required** | Uses official Modal Node.js SDK |
+| **Works with Any MCP Agent** | Claude, Claude Code, Codex, Cursor, custom clients |
 
-## Install
+---
+
+## Quick Start (3 Steps)
+
+### 1. Install
 
 ```bash
+# Global (recommended for most users)
 npm install -g modal-mcp-server
+
+# Or project-local (for teams/CI)
+npm install modal-mcp-server --save-dev
 ```
 
-## Modal Authentication
+### 2. Configure Modal Authentication
 
-The server uses the Modal Node.js SDK which supports the same authentication methods as the Python SDK.
-
-### Option 1: Environment Variables (Recommended)
-
-Set these environment variables with your Modal tokens:
+Get your tokens from [modal.com/tokens](https://modal.com/tokens), then set as environment variables:
 
 ```bash
-export MODAL_TOKEN_ID=ak-your-token-id
-export MODAL_TOKEN_SECRET=as-your-token-secret
+# Unix/macOS
+export MODAL_TOKEN_ID=ak-xxxxxxxx
+export MODAL_TOKEN_SECRET=as-xxxxxxxxxxxxxxxxxxxxxxxx
+
+# Windows PowerShell
+$env:MODAL_TOKEN_ID="ak-xxxxxxxx"
+$env:MODAL_TOKEN_SECRET="as-xxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
-PowerShell:
-```powershell
-$env:MODAL_TOKEN_ID="ak-your-token-id"
-$env:MODAL_TOKEN_SECRET="as-your-token-secret"
-```
-
-### Option 2: Modal Config File
-
-Create a Modal config file at `~/.modal.toml`:
-
+Or use a config file at `~/.modal.toml`:
 ```toml
 [modal]
-token_id = "ak-your-token-id"
-token_secret = "as-your-token-secret"
+token_id = "ak-xxxxxxxx"
+token_secret = "as-xxxxxxxxxxxxxxxxxxxxxxxx"
 ```
 
-The config file path can be customized via `MODAL_CONFIG_PATH` environment variable.
+### 3. Add to Your MCP Agent
 
-### Option 3: Python Modal CLI (Legacy)
-
-If you have the Modal Python CLI installed, you can still use:
-
-```bash
-python3 -m pip install modal
-python3 -m modal setup
-```
-
-The Node.js SDK will automatically use the tokens from the Python CLI configuration.
-
-## Verify Installation
-
-Check that the server can authenticate with Modal:
-
-```bash
-modal-mcp-server doctor
-```
-
-This will verify that the Modal Node.js SDK is properly authenticated.
-
-## MCP Client Configuration
-
-Use the global npm binary:
-
-```json
-{
-  "mcpServers": {
-    "modal": {
-      "command": "modal-mcp-server"
-    }
-  }
-}
-```
-
-If you authenticate with Modal tokens, include them:
-
+**Claude Desktop** (`~/Library/Application Support/Claude/claude_desktop_config.json`):
 ```json
 {
   "mcpServers": {
     "modal": {
       "command": "modal-mcp-server",
       "env": {
-        "MODAL_TOKEN_ID": "ak-your-token-id",
-        "MODAL_TOKEN_SECRET": "as-your-token-secret"
+        "MODAL_TOKEN_ID": "ak-xxxxxxxx",
+        "MODAL_TOKEN_SECRET": "as-xxxxxxxxxxxxxxxxxxxxxxxx"
       }
     }
   }
 }
 ```
 
-## Available Tools
+**Claude Code / Cursor / Codex / Generic:**
+```json
+{
+  "mcpServers": {
+    "modal": {
+      "command": "modal-mcp-server",
+      "env": {
+        "MODAL_TOKEN_ID": "ak-xxxxxxxx",
+        "MODAL_TOKEN_SECRET": "as-xxxxxxxxxxxxxxxxxxxxxxxx"
+      }
+    }
+  }
+}
+```
+
+**Restart your agent**, then verify:
+```
+modal_check_environment
+# → {"ok": true, ...}
+```
+
+---
+
+## Available MCP Tools
 
 | Tool | Purpose |
-| --- | --- |
-| `modal_check_environment` | Check Modal Node.js SDK authentication |
-| `modal_run_tests` | Run a test command on a Modal GPU |
-| `modal_run_training_job` | Run a training or fine-tuning command |
-| `modal_run_function` | Run one Python script for inference, evaluation, or benchmarking |
-| `modal_get_job_status` | Poll a job |
-| `modal_stream_logs` | Read buffered setup/stdout/stderr logs |
-| `modal_get_job_result` | Read stdout, stderr, exit code, and duration |
-| `modal_cancel_job` | Cancel a running job |
-| `modal_list_jobs` | List jobs started by this server process |
+|------|---------|
+| `modal_check_environment` | Verify Modal authentication |
+| `modal_run_tests` | Run test command (pytest, custom) on GPU |
+| `modal_run_function` | Run Python script on GPU |
+| `modal_run_training_job` | Launch training/fine-tuning (background by default) |
+| `modal_get_job_status` | Poll job status |
+| `modal_stream_logs` | Stream logs with cursor/follow support |
+| `modal_get_job_result` | Get stdout, stderr, exit code, duration |
+| `modal_cancel_job` | Cancel running job |
+| `modal_list_jobs` | List recent jobs |
 
-## Examples
+---
 
-Run tests on a T4 and wait for the result:
+## Common Use Cases
 
+### Run GPU Tests
 ```json
 {
   "project_path": "/absolute/path/to/project",
-  "test_command": "pytest tests/ -v --tb=short",
-  "extra_packages": ["pytest", "torch"],
+  "test_command": "pytest tests/ -v",
   "gpu": "T4",
+  "extra_packages": ["torch", "torchvision"],
   "wait": true
 }
 ```
 
-Start a training job in the background:
-
+### Run Training (Background)
 ```json
 {
   "project_path": "/absolute/path/to/project",
-  "train_command": "python train.py --epochs 3 --batch-size 16",
+  "train_command": "python train.py --epochs 10",
   "requirements_file": "requirements.txt",
   "gpu": "A100",
-  "timeout": 7200,
-  "wait": false
+  "wait": false,
+  "volume_mounts": [{"volume_name": "checkpoints", "mount_path": "/checkpoints"}]
 }
 ```
 
-Run a benchmark script:
-
+### Run Inference Script
 ```json
 {
   "project_path": "/absolute/path/to/project",
-  "script_path": "src/benchmark.py",
-  "function_args": "--model bert-base-uncased --batch-size 32",
-  "extra_packages": ["torch", "transformers"],
-  "gpu": "A10"
+  "script_path": "inference.py",
+  "function_args": "--model llama-3-8b --batch 4",
+  "extra_packages": ["vllm", "transformers"],
+  "gpu": "H100",
+  "wait": true
 }
 ```
 
-## Upload Behavior
-
-The server uploads your project into `/project` inside an ephemeral Modal sandbox. It excludes common heavy folders by default:
-
-- `.git`
-- `.venv`, `venv`, `env`
-- `node_modules`
-- `dist`, `build`
-- Python caches and test caches
-
-Exclude datasets, checkpoints, or generated artifacts:
-
+Then stream logs:
 ```json
 {
-  "exclude_patterns": ["data/**", "checkpoints/**", "*.pt"]
+  "job_id": "job_xxx",
+  "follow": true,
+  "cursor": 0
 }
 ```
 
-The default upload limit is 512 MiB. Override per call with `max_upload_mb` or globally with `MODAL_MCP_MAX_UPLOAD_MB`.
+---
+
+## CLI Usage (Alternative to MCP)
+
+The package also includes a full-featured CLI:
+
+```bash
+# Auth check
+modal-mcp-server doctor
+
+# Run tests
+modal-mcp-server run-tests -p /path -c "pytest" --gpu T4 --wait -e torch
+
+# Run Python script
+modal-mcp-server run-function -p /path --script train.py --gpu L4 --wait -r requirements.txt
+
+# Run training (background)
+modal-mcp-server run-training -p /path -c "python train.py" --gpu H100 --wait=false
+
+# Job management
+modal-mcp-server list-jobs
+modal-mcp-server get-status -j job_xxx
+modal-mcp-server logs -j job_xxx -f     # follow mode
+modal-mcp-server get-result -j job_xxx
+modal-mcp-server cancel-job -j job_xxx
+```
+
+---
 
 ## Configuration
 
-| Variable | Default | Purpose |
-| --- | --- | --- |
-| `MODAL_TOKEN_ID` | - | Modal authentication token ID |
-| `MODAL_TOKEN_SECRET` | - | Modal authentication token secret |
-| `MODAL_CONFIG_PATH` | `~/.modal.toml` | Path to Modal config file |
-| `MODAL_MCP_DEFAULT_GPU` | `T4` | Default Modal GPU |
-| `MODAL_MCP_PYTHON_VERSION` | `3.11` | Python version for the Modal sandbox image |
-| `MODAL_MCP_TEST_TIMEOUT_SECONDS` | `300` | Default test timeout |
-| `MODAL_MCP_SCRIPT_TIMEOUT_SECONDS` | `300` | Default script timeout |
-| `MODAL_MCP_TRAINING_TIMEOUT_SECONDS` | `86400` | Default training timeout |
-| `MODAL_MCP_MAX_UPLOAD_MB` | `512` | Default upload limit |
-| `MODAL_MCP_APP_NAME` | `modal-mcp-server` | Modal app name used for sandboxes |
+| Variable | Default | Description |
+|----------|---------|-------------|
+| `MODAL_TOKEN_ID` | — | Modal token ID (required) |
+| `MODAL_TOKEN_SECRET` | — | Modal token secret (required) |
+| `MODAL_CONFIG_PATH` | `~/.modal.toml` | Modal config file path |
+| `MODAL_MCP_DEFAULT_GPU` | `T4` | Default GPU type |
+| `MODAL_MCP_PYTHON_VERSION` | `3.11` | Python version for sandbox |
+| `MODAL_MCP_TEST_TIMEOUT_SECONDS` | `300` | Test timeout |
+| `MODAL_MCP_SCRIPT_TIMEOUT_SECONDS` | `300` | Script timeout |
+| `MODAL_MCP_TRAINING_TIMEOUT_SECONDS` | `86400` | Training timeout |
+| `MODAL_MCP_MAX_UPLOAD_MB` | `512` | Max upload (1-10240) |
+| `MODAL_MCP_APP_NAME` | `modal-mcp-server` | Modal app name |
+| `MODAL_MCP_CONCURRENCY_LIMIT` | `10` | Upload concurrency |
 
-Supported GPU values:
+**Supported GPUs:** `none`, `any`, `T4`, `L4`, `A10`, `L40S`, `A100`, `A100-40GB`, `A100-80GB`, `RTX-PRO-6000`, `H100`, `H100!`, `H200`, `B200`, `B200+`
 
-```text
-any, T4, L4, A10, L40S, A100, A100-40GB, A100-80GB, RTX-PRO-6000, H100, H100!, H200, B200, B200+
+---
+
+## Project Structure for GitHub Repo
+
+```
+modal-mcp-server/
+├── dist/                    # Compiled output (after build)
+├── src/                     # TypeScript source
+│   ├── index.ts             # MCP server entry point
+│   ├── cli.ts               # CLI entry point
+│   ├── core/                # Core types, config, jobs
+│   ├── schemas/             # Zod input schemas
+│   ├── services/            # Modal SDK integration
+│   ├── tools/               # MCP tool registrations
+│   └── utils/               # Errors, retry logic
+├── test/                    # Vitest tests
+├── scripts/                 # Build/smoke scripts
+├── skills/                  # Skill documentation
+│   └── modal-mcp-server/
+│       ├── skill.yaml      # Skill manifest
+│       ├── README.md       # Full skill docs
+│       ├── QUICKSTART.md   # 3-minute quickstart
+│       ├── setup.sh        # Automated Unix installer
+│       ├── setup.ps1       # Automated Windows installer
+│       ├── config/         # Config templates
+│       └── agents/         # Agent-specific configs
+├── package.json
+├── tsconfig.json
+└── CLAUDE.md               # Development guide
 ```
 
-## Troubleshooting
+---
 
-### Authentication Issues
-
-If `doctor` says authentication failed:
-
-1. **Check environment variables**: Ensure `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` are set correctly
-2. **Check config file**: Ensure `~/.modal.toml` exists with correct tokens
-3. **Get new tokens**: Visit https://modal.com/tokens to generate new tokens
-4. **Check token permissions**: Ensure tokens have the necessary permissions
-
-### Node.js Version Issues
-
-If you get Node.js version errors:
+## Development
 
 ```bash
-# Check your Node.js version
-node --version
+# Clone
+git clone https://github.com/codewithdark-git/modal-mcp-server.git
+cd modal-mcp-server
 
-# Should be 20 or newer
-# If not, upgrade Node.js
+# Install & build
+npm install
+npm run build
+
+# Test
+npm test
+
+# Smoke test (verifies all 9 MCP tools work)
+npm run smoke:mcp
+
+# Run CLI
+node dist/cli.js doctor
+node dist/cli.js run-tests -p /path -c "pytest" --gpu T4 --wait
 ```
 
-The Modal Node.js SDK requires Node.js 20 or later.
+---
 
-### Upload Size Limit Issues
+## Links
 
-If uploads fail due to size limits:
+- **NPM Package:** [npmjs.com/package/modal-mcp-server](https://www.npmjs.com/package/modal-mcp-server)
+- **GitHub:** [github.com/codewithdark-git/modal-mcp-server](https://github.com/codewithdark-git/modal-mcp-server)
+- **Modal Docs:** [modal.com/docs](https://modal.com/docs)
+- **MCP Spec:** [modelcontextprotocol.io](https://modelcontextprotocol.io)
+- **Issues:** [github.com/codewithdark-git/modal-mcp-server/issues](https://github.com/codewithdark-git/modal-mcp-server/issues)
 
-```json
-{
-  "max_upload_mb": 1024,
-  "exclude_patterns": ["data/**", "*.pt", "*.pth"]
-}
-```
+---
 
-Or set globally:
+## License
 
-```bash
-export MODAL_MCP_MAX_UPLOAD_MB=1024
-```
-
-### GPU Availability Issues
-
-If a specific GPU is not available:
-
-1. Check available GPUs in your Modal account
-2. Use `any` to let Modal choose an available GPU
-3. Or specify a different GPU from the supported list
-
-## Notes
-
-Each run creates an ephemeral Modal sandbox and terminates it after the command finishes or is cancelled. Your Modal account controls billing and GPU availability.
-
-The server now uses the official Modal Node.js SDK, which means:
-- **No Python required** on the client machine
-- **Same authentication** methods as the Python SDK
-- **Full TypeScript support** for better type safety
-- **Modern architecture** aligned with Modal's development direction
-
-## Migration from Previous Versions
-
-If you were using a previous version that required Python:
-
-1. **Uninstall Python dependencies** (optional):
-   ```bash
-   pip uninstall modal
-   ```
-
-2. **Update configuration**: Remove `MODAL_MCP_PYTHON` environment variable if set
-
-3. **Authentication**: Continue using the same `MODAL_TOKEN_ID` and `MODAL_TOKEN_SECRET` environment variables
-
-4. **Verify**: Run `modal-mcp-server doctor` to check the new Node.js SDK authentication
+MIT License — see [LICENSE](LICENSE) for details.

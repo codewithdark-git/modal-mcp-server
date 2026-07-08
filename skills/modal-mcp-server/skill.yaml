@@ -1,0 +1,101 @@
+name: modal-mcp-server
+version: "1.0.0"
+description: "MCP server for running GPU-dependent Python workloads (PyTorch, JAX, TensorFlow, Triton, CUDA) on Modal.com using your own Modal account. Supports tests, training, inference, and benchmarks with real-time progress streaming and log following."
+author: "modal-mcp-server contributors"
+license: "MIT"
+repository: "https://github.com/codewithdark-git/modal-mcp-server"
+homepage: "https://github.com/codewithdark-git/modal-mcp-server"
+npm_package: "modal-mcp-server"
+tags:
+  - mcp
+  - modal
+  - gpu
+  - python
+  - pytorch
+  - training
+  - inference
+  - cuda
+  - jax
+  - tensorflow
+  - triton
+  - llm
+  - machine-learning
+parameters:
+  - name: modal_token_id
+    description: "Modal API token ID (required)"
+    required: true
+    type: string
+    secret: true
+  - name: modal_token_secret
+    description: "Modal API token secret (required)"
+    required: true
+    type: string
+    secret: true
+  - name: default_gpu
+    description: "Default GPU type for jobs"
+    required: false
+    type: string
+    default: "T4"
+    enum: ["none", "any", "T4", "L4", "A10", "L40S", "A100", "A100-40GB", "A100-80GB", "RTX-PRO-6000", "H100", "H100!", "H200", "B200", "B200+"]
+  - name: python_version
+    description: "Python version for sandbox"
+    required: false
+    type: string
+    default: "3.11"
+    pattern: "^3\\.\\d{1,2}$"
+  - name: max_upload_mb
+    description: "Maximum upload size in MiB"
+    required: false
+    type: integer
+    default: 512
+    minimum: 1
+    maximum: 10240
+  - name: concurrency_limit
+    description: "Max concurrent file uploads"
+    required: false
+    type: integer
+    default: 10
+    minimum: 1
+    maximum: 100
+  - name: app_name
+    description: "Modal app name for sandboxes"
+    required: false
+    type: string
+    default: "modal-mcp-server"
+tools:
+  - name: modal_check_environment
+    description: "Check Modal authentication and environment"
+  - name: modal_run_tests
+    description: "Run test command on GPU (pytest, custom test command)"
+  - name: modal_run_function
+    description: "Run a Python script on Modal GPU"
+  - name: modal_run_training_job
+    description: "Launch training or fine-tuning job on Modal GPU (background by default)"
+  - name: modal_get_job_status
+    description: "Poll job status"
+  - name: modal_stream_logs
+    description: "Read buffered logs with cursor-based streaming (follow mode supported)"
+  - name: modal_get_job_result
+    description: "Get stdout, stderr, exit code"
+  - name: modal_cancel_job
+    description: "Cancel a running job"
+  - name: modal_list_jobs
+    description: "List recent jobs"
+agent_configs:
+  - claude_desktop
+  - claudecode
+  - codex
+  - cursor
+  - generic
+install_methods:
+  - global_npx
+  - local_npm
+  - project_local
+auto_start:
+  - systemd
+  - launchagent
+  - task_scheduler
+documentation:
+  readme: "README.md"
+  quickstart: "QUICKSTART.md"
+  changelog: "CHANGELOG.md"
