@@ -1,4 +1,5 @@
 export const GPU_TYPES = [
+  "none",
   "any",
   "T4",
   "L4",
@@ -13,7 +14,6 @@ export const GPU_TYPES = [
   "H200",
   "B200",
   "B200+",
-  "none", // CPU-only execution
 ] as const;
 
 export type GpuType = (typeof GPU_TYPES)[number];
@@ -36,6 +36,12 @@ export interface ModalRunConfig {
   excludePatterns: string[];
   maxUploadMb: number;
   concurrencyLimit?: number;
+  volumeMounts?: VolumeMount[];
+}
+
+export interface VolumeMount {
+  volumeName: string;
+  mountPath: string;
 }
 
 export interface JobResult {
@@ -70,4 +76,88 @@ export interface StartedJob {
   job: JobInfo;
   done: Promise<JobInfo>;
   cancel: () => void;
+}
+
+// Progress tracking types
+export type JobProgressPhase = "collecting" | "uploading" | "installing" | "running" | "complete" | "error";
+
+export interface JobProgress {
+  phase: JobProgressPhase;
+  completed: number;
+  total: number;
+  currentFile?: string;
+  message?: string;
+}
+
+export interface UploadProgress {
+  filesCompleted: number;
+  filesTotal: number;
+  bytesCompleted: number;
+  bytesTotal: number;
+  currentFile?: string;
+}
+
+export type ProgressCallback = (progress: JobProgress) => void;
+
+export interface ModalRunConfigWithProgress extends ModalRunConfig {
+  onProgress?: ProgressCallback;
+}
+
+export interface JobResult {
+  job_id: string;
+  status: JobStatus;
+  exit_code: number | null;
+  stdout: string;
+  stderr: string;
+  duration_ms: number;
+}
+
+export interface JobInfo {
+  jobId: string;
+  status: JobStatus;
+  kind: JobKind;
+  startedAt: string;
+  completedAt?: string;
+  projectPath: string;
+  command: string;
+  gpu: GpuType;
+  timeoutSeconds: number;
+  sandboxId?: string;
+  exitCode?: number | null;
+  durationMs?: number;
+  error?: string;
+  stdout: string;
+  stderr: string;
+  logs: string[];
+}
+
+export interface StartedJob {
+  job: JobInfo;
+  done: Promise<JobInfo>;
+  cancel: () => void;
+}
+
+// Progress tracking types
+export type JobProgressPhase = "collecting" | "uploading" | "installing" | "running" | "complete" | "error";
+
+export interface JobProgress {
+  phase: JobProgressPhase;
+  completed: number;
+  total: number;
+  currentFile?: string;
+  message?: string;
+}
+
+export interface UploadProgress {
+  filesCompleted: number;
+  filesTotal: number;
+  bytesCompleted: number;
+  bytesTotal: number;
+  currentFile?: string;
+}
+
+export type ProgressCallback = (progress: JobProgress) => void;
+
+export interface ModalRunConfigWithProgress extends ModalRunConfig {
+  onProgress?: ProgressCallback;
 }

@@ -29,6 +29,8 @@ export const DEFAULT_EXCLUDE_PATTERNS = [
   ".gitmodules",
 ] as const;
 
+export type DefaultExcludePattern = (typeof DEFAULT_EXCLUDE_PATTERNS)[number];
+
 export const DEFAULT_GPU = readEnv("MODAL_MCP_DEFAULT_GPU", "T4") as GpuType;
 export const DEFAULT_PYTHON_VERSION = readEnv("MODAL_MCP_PYTHON_VERSION", "3.11");
 export const DEFAULT_TEST_TIMEOUT_SECONDS = readIntEnv("MODAL_MCP_TEST_TIMEOUT_SECONDS", 300);

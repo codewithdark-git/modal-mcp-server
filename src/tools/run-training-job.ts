@@ -28,7 +28,8 @@ export function registerRunTrainingJob(server: McpServer): void {
     async (rawInput: unknown) => {
       try {
         const input = RunTrainingJobInputSchema.parse(rawInput);
-        const started = await startModalJob(toConfig(input));
+        const config = toConfig(input);
+        const started = await startModalJob(config);
         if (!input.wait) return jobStartedResponse(started.job);
         const completed = await waitForJob(started);
         return jobResultResponse(toResult(completed));
@@ -39,7 +40,7 @@ export function registerRunTrainingJob(server: McpServer): void {
   );
 }
 
-function toConfig(input: RunTrainingJobInput): ModalRunConfig {
+export function toConfig(input: RunTrainingJobInput): ModalRunConfig {
   return {
     kind: "training",
     projectPath: input.project_path,

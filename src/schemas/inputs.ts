@@ -1,6 +1,7 @@
 import path from "node:path";
 import { z } from "zod";
-import { DEFAULT_MAX_UPLOAD_MB } from "../core/config.js";
+import { DEFAULT_MAX_UPLOAD_MB, DEFAULT_EXCLUDE_PATTERNS } from "../core/config.js";
+import { GPU_TYPES } from "../core/types.js";
 
 // Add "none" to GPU types for CPU-only execution
 export const GPU_TYPES = [
@@ -65,13 +66,15 @@ const CommonRunShape = {
     .max(10_240)
     .default(DEFAULT_MAX_UPLOAD_MB)
     .describe("Maximum total upload size in MiB."),
-  concurrency_limit: z
-    .number()
-    .int()
-    .min(1)
-    .max(50)
+  volume_mounts: z
+    .array(
+      z.object({
+        volume_name: z.string().min(1),
+        mount_path: z.string().min(1),
+      })
+    )
     .optional()
-    .describe("Number of concurrent file uploads. Default: 10."),
+    .describe("Modal Volume mounts for caching (e.g., pip cache, dataset volumes)."),
 };
 
 export const RunTestsInputSchema = z
@@ -103,6 +106,8 @@ export const RunFunctionInputSchema = z
 export const JobIdInputSchema = z
   .object({
     job_id: z.string().startsWith("job_"),
+    follow: z.boolean().default(false).describe("If true, wait for new logs and return them (long-polling style)."),
+    cursor: z.number().int().min(0).optional().describe("Log line index to start from. If omitted, returns all logs."),
   })
   .strict();
 

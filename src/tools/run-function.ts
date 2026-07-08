@@ -29,7 +29,8 @@ export function registerRunFunction(server: McpServer): void {
     async (rawInput: unknown) => {
       try {
         const input = RunFunctionInputSchema.parse(rawInput);
-        const started = await startModalJob(toConfig(input));
+        const config = toConfig(input);
+        const started = await startModalJob(config);
         if (!input.wait) return jobStartedResponse(started.job);
         const completed = await waitForJob(started);
         return jobResultResponse(toResult(completed));
@@ -40,7 +41,7 @@ export function registerRunFunction(server: McpServer): void {
   );
 }
 
-function toConfig(input: RunFunctionInput): ModalRunConfig {
+export function toConfig(input: RunFunctionInput): ModalRunConfig {
   const script = input.script_path.replaceAll("\\", "/");
   if (path.isAbsolute(script) || script.includes("..")) {
     throw new Error("script_path must be a relative path inside project_path.");

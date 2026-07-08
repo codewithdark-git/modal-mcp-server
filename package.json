@@ -33,10 +33,11 @@
     "llm"
   ],
   "license": "MIT",
-  "author": "AlphaTechLogics",
+  "author": "codewithdark",
   "type": "module",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.12.0",
+    "commander": "^15.0.0",
     "modal": "^0.7.2",
     "zod": "^3.25.0"
   },

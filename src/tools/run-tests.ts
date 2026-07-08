@@ -6,7 +6,7 @@ import {
   DEFAULT_TEST_TIMEOUT_SECONDS,
 } from "../core/config.js";
 import { startModalJob, toResult, waitForJob } from "../core/jobs.js";
-import type { ModalRunConfig } from "../core/types.js";
+import type { ModalRunConfig, ProgressCallback } from "../core/types.js";
 import { RunTestsInputSchema, type RunTestsInput } from "../schemas/inputs.js";
 import { errorResponse, jobResultResponse, jobStartedResponse } from "./responses.js";
 
@@ -28,7 +28,9 @@ export function registerRunTests(server: McpServer): void {
     async (rawInput: unknown) => {
       try {
         const input = RunTestsInputSchema.parse(rawInput);
-        const started = await startModalJob(toConfig(input));
+        const config = toConfig(input);
+        // MCP mode: no progress callback, but CLI can pass one
+        const started = await startModalJob(config);
         if (!input.wait) return jobStartedResponse(started.job);
         const completed = await waitForJob(started);
         return jobResultResponse(toResult(completed));
@@ -39,7 +41,7 @@ export function registerRunTests(server: McpServer): void {
   );
 }
 
-function toConfig(input: RunTestsInput): ModalRunConfig {
+export function toConfig(input: RunTestsInput): ModalRunConfig {
   return {
     kind: "tests",
     projectPath: input.project_path,

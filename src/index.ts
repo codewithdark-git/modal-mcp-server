@@ -15,7 +15,20 @@ import { registerRunTrainingJob } from "./tools/run-training-job.js";
 import { checkModalAuthentication } from "./services/modal.js";
 
 async function main(): Promise<void> {
-  if (process.argv[2] === "doctor") {
+  // Check if running as CLI (has subcommand) or MCP server (no args or --mcp flag)
+  const args = process.argv.slice(2);
+  const hasSubcommand = args.length > 0 && !args[0].startsWith("--");
+  const isMcpMode = args.includes("--mcp") || (!hasSubcommand && !args.includes("--help") && !args.includes("-h") && !args.includes("-V") && !args.includes("--version"));
+
+  if (hasSubcommand && !isMcpMode) {
+    // Run CLI mode - delegate to cli.ts
+    const { default: cliMain } = await import("./cli.js");
+    await cliMain();
+    return;
+  }
+
+  // MCP server mode (default)
+  if (args[0] === "doctor") {
     const result = await checkModalAuthentication();
     console.log(JSON.stringify(result, null, 2));
     process.exit(result.ok ? 0 : 1);
@@ -51,10 +64,3 @@ main().catch((error: unknown) => {
   console.error("[modal-mcp-server] Fatal error:", error);
   process.exit(1);
 });
-
-function readFlag(name: string): string | undefined {
-  const index = process.argv.indexOf(name);
-  if (index === -1) return undefined;
-  const value = process.argv[index + 1];
-  return value && !value.startsWith("--") ? value : undefined;
-}

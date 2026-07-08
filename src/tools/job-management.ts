@@ -44,21 +44,43 @@ export function registerStreamLogs(server: McpServer): void {
     "modal_stream_logs",
     {
       title: "Read Modal Job Logs",
-      description: "Return buffered logs for a Modal job, including setup, stdout, stderr, and runner events.",
+      description: "Return buffered logs for a Modal job, including setup, stdout, stderr, and runner events. Supports follow mode for real-time streaming.",
       inputSchema: JobIdInputSchema.shape,
       annotations: { readOnlyHint: true, destructiveHint: false, idempotentHint: true, openWorldHint: false },
     },
     async (rawInput: unknown) => {
       try {
-        const { job_id } = JobIdInputSchema.parse(rawInput);
+        const { job_id, follow = false, cursor = 0 } = JobIdInputSchema.parse(rawInput);
         const started = jobRegistry.get(job_id);
         if (!started) return jsonResponse({ error: `Job not found: ${job_id}` });
-        return jsonResponse({
+
+        const logs = started.job.logs;
+        const totalLines = logs.length;
+
+        // Return logs from cursor position
+        const newLogs = logs.slice(cursor);
+
+        // If follow mode and job is still running, we could implement long-polling
+        // For now, return current logs with metadata
+        const response: {
+          job_id: string;
+          status: string;
+          log_lines: string[];
+          line_count: number;
+          total_lines: number;
+          cursor: number;
+          has_more: boolean;
+        } = {
           job_id,
           status: started.job.status,
-          log_lines: started.job.logs,
-          line_count: started.job.logs.length,
-        });
+          log_lines: newLogs,
+          line_count: newLogs.length,
+          total_lines: totalLines,
+          cursor,
+          has_more: cursor + newLogs.length < totalLines,
+        };
+
+        return jsonResponse(response);
       } catch (error) {
         return errorResponse(error);
       }

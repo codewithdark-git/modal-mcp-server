@@ -1,5 +1,5 @@
 import { randomUUID } from "node:crypto";
-import type { JobInfo, JobResult, ModalRunConfig, StartedJob } from "./types.js";
+import type { JobInfo, JobResult, ModalRunConfig, StartedJob, ProgressCallback, JobProgress } from "./types.js";
 import { executeModalJob, type ModalJobConfig, type ModalJobResult } from "../services/modal.js";
 import { DEFAULT_APP_NAME } from "./config.js";
 
@@ -9,7 +9,7 @@ export function generateJobId(): string {
   return `job_${Date.now()}_${randomUUID().slice(0, 8)}`;
 }
 
-export async function startModalJob(config: ModalRunConfig): Promise<StartedJob> {
+export async function startModalJob(config: ModalRunConfig & { onProgress?: ProgressCallback }): Promise<StartedJob> {
   const job: JobInfo = {
     jobId: generateJobId(),
     status: "pending",
@@ -41,13 +41,16 @@ export async function startModalJob(config: ModalRunConfig): Promise<StartedJob>
     env: config.env,
     excludePatterns: config.excludePatterns,
     maxUploadMb: config.maxUploadMb,
+    volumeMounts: config.volumeMounts,
     concurrencyLimit: config.concurrencyLimit,
-    onProgress: (progress) => {
-      appendLog(job, "upload", 
-        `Uploading: ${progress.uploaded}/${progress.total} files (${progress.currentFile || "..."})`
-      );
-    },
-    onLog: (level, message) => {
+    onProgress: config.onProgress
+      ? config.onProgress
+      : (progress: JobProgress) => {
+          appendLog(job, "upload",
+            `Uploading: ${progress.completed}/${progress.total} files (${progress.currentFile || "..."})`
+          );
+        },
+    onLog: (level: string, message: string) => {
       appendLog(job, level, message);
     },
   };
