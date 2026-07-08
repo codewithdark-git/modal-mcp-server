@@ -1,9 +1,27 @@
 import path from "node:path";
 import { z } from "zod";
 import { DEFAULT_MAX_UPLOAD_MB } from "../core/config.js";
-import { GPU_TYPES } from "../core/types.js";
 
-export const GpuSchema = z.enum(GPU_TYPES).describe("Modal GPU type.");
+// Add "none" to GPU types for CPU-only execution
+export const GPU_TYPES = [
+  "any",
+  "T4",
+  "L4",
+  "A10",
+  "L40S",
+  "A100",
+  "A100-40GB",
+  "A100-80GB",
+  "RTX-PRO-6000",
+  "H100",
+  "H100!",
+  "H200",
+  "B200",
+  "B200+",
+  "none", // CPU-only execution
+] as const;
+
+export const GpuSchema = z.enum(GPU_TYPES).describe("Modal GPU type. Use 'none' for CPU-only execution.");
 
 export const ProjectPathSchema = z
   .string()
@@ -25,7 +43,7 @@ const CommonRunShape = {
     .string()
     .optional()
     .describe("Optional shell command to run in /project before the main command."),
-  gpu: GpuSchema.optional(),
+  gpu: GpuSchema.optional().default("T4").describe("Modal GPU type. Use 'none' for CPU-only execution."),
   timeout: z.number().int().min(10).max(86_400).optional().describe("Remote Modal sandbox timeout in seconds."),
   python_version: z
     .string()
@@ -39,7 +57,7 @@ const CommonRunShape = {
   exclude_patterns: z
     .array(z.string().min(1))
     .default([])
-    .describe("Additional gitignore-style patterns to exclude from upload."),
+    .describe("Additional gitignore-style patterns to exclude from upload. Supports **, *, and directory patterns."),
   max_upload_mb: z
     .number()
     .int()
@@ -47,6 +65,13 @@ const CommonRunShape = {
     .max(10_240)
     .default(DEFAULT_MAX_UPLOAD_MB)
     .describe("Maximum total upload size in MiB."),
+  concurrency_limit: z
+    .number()
+    .int()
+    .min(1)
+    .max(50)
+    .optional()
+    .describe("Number of concurrent file uploads. Default: 10."),
 };
 
 export const RunTestsInputSchema = z

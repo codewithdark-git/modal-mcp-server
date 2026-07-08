@@ -17,7 +17,7 @@ export function registerRunFunction(server: McpServer): void {
     {
       title: "Run Python Script on Modal GPU",
       description:
-        "Run a Python script from a local project in a Modal GPU sandbox for inference, evaluation, benchmarks, or ad hoc GPU work.",
+        "Run a Python script from a local project in a Modal GPU sandbox for inference, evaluation, benchmarks, or ad hoc GPU work. Use gpu='none' for CPU-only execution.",
       inputSchema: RunFunctionInputSchema.shape,
       annotations: {
         readOnlyHint: false,
@@ -59,6 +59,7 @@ function toConfig(input: RunFunctionInput): ModalRunConfig {
     env: input.env,
     excludePatterns: [...DEFAULT_EXCLUDE_PATTERNS, ...input.exclude_patterns],
     maxUploadMb: input.max_upload_mb,
+    concurrencyLimit: input.concurrency_limit,
   };
 }
 

@@ -13,6 +13,7 @@ export const GPU_TYPES = [
   "H200",
   "B200",
   "B200+",
+  "none", // CPU-only execution
 ] as const;
 
 export type GpuType = (typeof GPU_TYPES)[number];
@@ -34,6 +35,7 @@ export interface ModalRunConfig {
   env: Record<string, string>;
   excludePatterns: string[];
   maxUploadMb: number;
+  concurrencyLimit?: number;
 }
 
 export interface JobResult {

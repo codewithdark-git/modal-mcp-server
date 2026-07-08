@@ -16,7 +16,7 @@ export function registerRunTrainingJob(server: McpServer): void {
     {
       title: "Run Training Job on Modal GPU",
       description:
-        "Launch a training or fine-tuning command on a Modal GPU sandbox. Defaults to background mode so agents can poll status and logs.",
+        "Launch a training or fine-tuning command on a Modal GPU sandbox. Defaults to background mode so agents can poll status and logs. Use gpu='none' for CPU-only execution.",
       inputSchema: RunTrainingJobInputSchema.shape,
       annotations: {
         readOnlyHint: false,
@@ -53,5 +53,6 @@ function toConfig(input: RunTrainingJobInput): ModalRunConfig {
     env: input.env,
     excludePatterns: [...DEFAULT_EXCLUDE_PATTERNS, ...input.exclude_patterns],
     maxUploadMb: input.max_upload_mb,
+    concurrencyLimit: input.concurrency_limit,
   };
 }

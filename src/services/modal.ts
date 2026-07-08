@@ -2,6 +2,13 @@ import { ModalClient, type Sandbox, type ContainerProcess } from "modal";
 import { readdir, stat, readFile } from "node:fs/promises";
 import { join, relative, posix } from "node:path";
 
+import { pathToFileURL } from "node:url";
+import {
+  DEFAULT_CONCURRENCY_LIMIT,
+  DEFAULT_RETRY_ATTEMPTS,
+  DEFAULT_RETRY_DELAY_MS,
+} from "../core/config.js";
+
 // Singleton Modal client instance
 let modalClient: ModalClient | null = null;
 
@@ -21,6 +28,9 @@ export interface ModalJobConfig extends ModalConfig {
   env: Record<string, string>;
   excludePatterns: string[];
   maxUploadMb: number;
+  concurrencyLimit?: number;
+  onProgress?: (progress: { uploaded: number; total: number; currentFile?: string }) => void;
+  onLog?: (level: "info" | "warn" | "error", message: string) => void;
 }
 
 export interface ModalJobResult {
